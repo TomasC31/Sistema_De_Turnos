@@ -24,7 +24,8 @@ const config = {
 
 // --- CONEXIÓN ---
 sql.connect(config)
-    .then(pool => {
+    .then(resultado => {
+        pool = resultado
         console.log('¡Conexión a SQL Server exitosa! 🟢');
         
         // Encendemos el servidor web
@@ -39,50 +40,61 @@ sql.connect(config)
 //---------------------------------------------------------------------------------------------------------
 
 //Variables Globales
+let pool;
 const reservas = []; //Base de datos provisoria
 let contadorDeId = 0;
 
 
 //Para ver los horarios
-app.get('/horarios', (req, res) => {
+app.get('/horarios', async (req, res) => {
 
-    const horarioConsultado = req.query.horarioElegido;
-    const fechaConsultada = req.query.fechaReserva;
+    const fechaConsultada = req.query.fecha;
+    const horarioConsultado = req.query.horario;
 
-    for(const ElementoIndividual of reservas){
-        if (horarioConsultado === ElementoIndividual.horarioElegido && fechaConsultada === ElementoIndividual.fechaReserva){
-            res.status(409).send('No hay horarios disponibles para la fecha seleccionada');
-            return;
-        }
+    const request = await pool.request();
+    
+    request.input("fecha", sql.Date, fechaConsultada)
+    request.input("horario", sql.VarChar, horarioConsultado)
+
+    const validar = await request.query ("SELECT * FROM dbo.reservas WHERE fechaReserva = @fecha AND horarioElegido = @horario");
+
+    if(validar.recordset.length > 0){
+        return res.status(409).send("Turno ocupado")
     }
-    res.status(200).send("El turno está disponible");
+    else{
+        res.status(200).send("Turno disponible")
+    }
 })
 
 
 //Para reservar el turno
-app.post('/reservar', (req, res) => {
-    //Recibo nombre, fecha y horario
-    const nombreCliente = req.body.nombre;
-    const fechaReserva = req.body.fecha;
-    const horarioElegido = req.body.horario;
+app.post('/reservar', async (req, res) => {
 
-    if (!nombreCliente || !fechaReserva || !horarioElegido) {
+    const {nombre, fecha, horario} = req.body;  
+
+    if (!nombre || !fecha || !horario) {
         res.status(400).send('Faltan datos para procesar la reserva');
         return;
     }
 
-    for(const ElementoIndividual of reservas){
-        if (fechaReserva === ElementoIndividual.fechaReserva && horarioElegido === ElementoIndividual.horarioElegido){
-            res.status(409).send('El turno no está disponible, por favor elija otro horario');
-            return;
-        }
+    const request = new sql.Request(); //Sirve para hacer consultas a la base de datos
+
+    request.input("fecha", sql.Date, req.body.fecha);
+    request.input("horario", sql.VarChar, req.body.horario);
+
+    const validarTurno = await request.query("SELECT * FROM dbo.reservas WHERE fechaReserva = @fecha AND horarioElegido = @horario");
+
+    
+    
+    if (validarTurno.recordset.length > 0) {
+        return res.status(409).send("Turno ocupado")
     }
-    //Si el turno esta disponible, le asigno un ID y lo guardo en la "base de datos"
-    contadorDeId ++;
-    
-    reservas.push({nombreCliente, fechaReserva, horarioElegido, id: contadorDeId});
-    
-    res.send(`Reserva confirmada para ${nombreCliente} a las ${horarioElegido}`)
+    else{
+        request.input("nombre", sql.VarChar, req.body.nombre);
+
+        await request.query("INSERT INTO dbo.reservas (nombreCliente, fechaReserva, horarioElegido) VALUES (@nombre, @fecha, @horario)")
+        res.send("El turno se guardó correctamente")
+    }
 })
 
 //Para registrar usuario
@@ -96,6 +108,10 @@ app.post("/registrar", async (req, res) => {
         request.input('email', sql.VarChar, email);
         //Le pregunto a la BD si ya conoce el email
         const resultadoBusqueda = await request.query('SELECT * FROM dbo.usuarios WHERE email = @email')
+
+        if(!nombre || !email || !password){
+            return  res.status(400).send("Faltan datos para registrarse")
+        }
 
         //Verifico si encontré a alguien
         if(resultadoBusqueda.recordset.length > 0){
@@ -125,6 +141,10 @@ app.post("/registrar", async (req, res) => {
 app.post("/login", async (req, res) => {
     const {email, password} = req.body;
     
+    if(!email || !password){
+        return res.status(400).send("Faltan datos para iniciar sesión")
+    }
+
     try{
         const request = new sql.Request();
         request.input('email', sql.VarChar, email);
@@ -155,6 +175,11 @@ app.post("/login", async (req, res) => {
         res.status(500).send("Error del servidor al intentar iniciar sesión");
     }
 })
+
+
+
+
+
 
 
 //Para dar de baja el turno
