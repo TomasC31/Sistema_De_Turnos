@@ -47,6 +47,7 @@ input[type="text"], input[type="password"], input[type="email"] {
     display: inline-block;
     border: 1px solid #ccc;
     box-sizing: border-box;
+ 
 }
 
 .btn-inicio {
@@ -125,3 +126,15 @@ input[type="text"], input[type="password"], input[type="email"] {
    color: white;
 }
 
+
+.mensaje-error {
+    color: red;
+    font-size: 18px;
+    margin-top: 50px;
+}
+
+.mensaje-exito-reserva {
+    color: green;
+    font-size: 18px;
+    margin-top: 50px;
+}

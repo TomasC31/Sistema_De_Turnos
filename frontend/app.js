@@ -15,13 +15,17 @@ const btnMostrarRegistro = document.getElementById("btn-mostrar-registro");
 const btnVolverDeLoginAInicio = document.getElementById("btn-volver-de-login-a-inicio");
 const btnVolverDeRegistroAInicio = document.getElementById("btn-volver-de-registro-a-inicio");
 const btnReservar = document.getElementById("btn-reservar");
+const btnCerrarSesion = document.getElementById("btn-cerrar-sesion");
 
 const seccionReservas = document.getElementById("seccion-reservas");
 const contenedorDias = document.getElementById("contenedor-dias");
 const pasoHorarios = document.getElementById("paso-horarios");
 const contenedorHorarios = document.getElementById("contenedor-horarios");
 const tituloBienvenida = document.getElementById("titulo-bienvenida");
-const btnCerrarSesion = document.getElementById("btn-cerrar-sesion");
+const mensajeErrorLogin = document.getElementById("mensaje-error-login");
+const mensajeErrorRegistro = document.getElementById("mensaje-error-registro");
+const mensajeReservaExitosa = document.getElementById("mensaje-reserva-exitosa")
+
 
 btnMostrarLogin.addEventListener('click', () => {
     pantallaInicio.classList.add('oculto')
@@ -43,8 +47,10 @@ btnVolverDeLoginAInicio.addEventListener('click', () => {
     pantallaInicio.classList.remove('oculto')
     encabezadoPrincipal.classList.remove('oculto');
 
+
     document.getElementById("login-email").value = "";
     document.getElementById("login-password").value = "";
+    document.getElementById("mensaje-error-login").textContent = "";
 })
 
 btnVolverDeRegistroAInicio.addEventListener('click', () => {
@@ -56,6 +62,7 @@ btnVolverDeRegistroAInicio.addEventListener('click', () => {
     document.getElementById("registro-email").value = "";
     document.getElementById("registro-password").value = "";
     document.getElementById("registro-nombre").value = "";
+    document.getElementById("mensaje-error-registro").textContent = "";
 })
 
 
@@ -89,7 +96,6 @@ formLogin.addEventListener("submit", (e) => {
     .then(datos => {
         // Verificamos si es el objeto de éxito
         if (datos.mensaje === "Bienvenido") {
-            alert("¡Hola " + datos.nombre + "! Has iniciado sesión.");
             
             //Ocultamos login y mostramos inicio
             seccionLogin.classList.add('oculto');
@@ -107,12 +113,12 @@ formLogin.addEventListener("submit", (e) => {
             document.getElementById("login-password").value = "";
         } else {
             // Si no, es un mensaje de error (ej: "Contraseña incorrecta")
-            alert(datos);
+            mensajeErrorLogin.textContent = datos
         }
     })
     .catch(error => {
         console.error("Error en la petición:", error);
-        alert("Hubo un problema de conexión.");
+        mensajeErrorLogin.textContent = "Hubo un problema de  conexión";
     });
 });
 
@@ -144,8 +150,7 @@ formRegister.addEventListener("submit", (e) => {
 
         .then(response => {
             if(response.ok){
-                response.text().then(mensaje => { alert(mensaje)})
-                
+            
                 document.getElementById("registro-email").value = "";
                 document.getElementById("registro-password").value = "";
                 document.getElementById("registro-nombre").value = "";
@@ -155,7 +160,7 @@ formRegister.addEventListener("submit", (e) => {
                 seccionLogin.classList.remove("oculto")
             }
             else{
-                response.text().then(mensaje => {alert(mensaje)})
+                response.text().then(mensaje => {mensajeErrorRegistro.textContent = mensaje});
             }
     });
 })
@@ -265,11 +270,19 @@ function reservarCancha(fecha, hora, botonHora){
         .then(datos => {
             // Verificamos si es el objeto de éxito
             if (datos === "El turno se guardó correctamente") {
-                alert("¡Reserva exitosa para el " + fecha + " a las " + hora + "!");
+
+                mensajeReservaExitosa.classList.remove("mensaje-error");
+                mensajeReservaExitosa.classList.add("mensaje-exito-reserva")
+                mensajeReservaExitosa.textContent ="¡Reserva exitosa para el " + fecha + " a las " + hora + "!";
                 botonHora.disabled = true; //Deshabilito el botón del horario reservado
                 botonHora.style.backgroundColor = "gray"; //Cambio el color del botón reservado
+
             } else {
-                alert(datos);
+
+                mensajeReservaExitosa.textContent = "Ese turno ya fue reservado por otro usuario. Por favor, elige otro horario.";
+                mensajeReservaExitosa.classList.remove("mensaje-exito-reserva")
+                mensajeReservaExitosa.classList.add("mensaje-error");
+
             }
         })
         .catch(error => {

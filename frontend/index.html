@@ -29,6 +29,9 @@
                  <form id="form-login">
                     <input id="login-email" type="text"  placeholder="Ingrese su correo">
                     <input id="login-password" type="password" placeholder="Ingrese su contraseña">
+
+                    <p id="mensaje-error-login" class="mensaje-error"></p>
+
                     <button type="submit" class="btn-inicio"> Iniciar Sesión </button>
                     <button id="btn-volver-de-login-a-inicio" type="button" class="btn-inicio"> Volver a Inicio </button>
                  </form>   
@@ -38,9 +41,12 @@
                 <h2> Registrarse </h2>
 
                 <form id="form-registro">
-                    <input id="registro-nombre" type="text" placeholder="Ingrese su nombre completo">
+                    <input id="registro-nombre" type="text" placeholder="Ingrese su nombre y apellido">
                     <input id="registro-email" type="text" placeholder="Ingrese su correo">
                     <input id="registro-password" type="password" placeholder="Ingrese su contraseña">
+
+                    <p id="mensaje-error-registro" class="mensaje-error"></p>
+
                     <button type="submit" class="btn-inicio"> Registrarse </button>
                     <button id="btn-volver-de-registro-a-inicio" type="button" class="btn-inicio"> Volver a Inicio </button>
                 </form>
@@ -58,6 +64,7 @@
                     <h3>Elige un horario:</h3>
                     <div id="contenedor-horarios"></div>
                 </div>
+                <p id="mensaje-reserva-exitosa" class="mensaje-exito-reserva"></p>
                 <button id ="btn-reservar" class="btn-inicio" disabled>Confirmar Reserva</button>
                 <button id="btn-cerrar-sesion" class="btn-inicio">Cerrar Sesion</button>
             </section>
