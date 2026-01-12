@@ -189,6 +189,10 @@ function generarDias() {
         //Cuando hacen click en un dia:
         boton.addEventListener("click", () => {
 
+            mensajeReservaExitosa.textContent = ""; //Borro el texto
+            mensajeReservaExitosa.classList.remove("mensaje-exito-reserva"); //Saco el color verde
+            mensajeReservaExitosa.classList.remove("mensaje-error"); //Saco el color rojo por las dudas
+
             //Resalto el día seleccionado
             const diaAnterior = document.querySelector(".btn-dia.seleccionado");
             if (diaAnterior) {
@@ -260,10 +264,10 @@ function reservarCancha(fecha, hora, botonHora) {
         body: JSON.stringify({ nombre: nombreUsuarioActual, fecha, horario: hora })
     })
 
-
         .then(response => {
             // Si la respuesta es exitosa (status 200-299), la tratamos como JSON
             if (response.ok) {
+                cargarMisReservas(); //Recargo las reservas del usuario
                 return response.text();
             } else {
                 // Si hay error (401, 404, etc.), la tratamos como texto
@@ -310,9 +314,10 @@ function cargarMisReservas() {
         })
         .then(listaReservas => {
             console.log("Reservas encontradas:", listaReservas);
-            
-            const hoy = new Date();
-            
+
+            const hoy = new Date()
+            hoy.setHours(0, 0, 0, 0); //Pongo la hora a 00:00 para comparar solo fechas y que en el if no falle
+
             //Ordeno las reservas de la más reciente a la más antigua mirando las fechas y horarios
             listaReservas.sort((b, a) => {
                 const textoFechaCompletaA = a.fechaReserva.split("T")[0] + "T" + a.horarioElegido.split("T")[1];
@@ -323,26 +328,51 @@ function cargarMisReservas() {
 
             listaReservas.forEach(elementoDeLista => {
 
-                const fechaACompararConLaDeHoy = new Date(elementoDeLista.fechaReserva);
-
-                if(fechaACompararConLaDeHoy >= hoy){
+                const partesFecha = elementoDeLista.fechaReserva.split("T")[0].split("-"); //Divido la fecha en partes [Año, Mes, Día]
+                const fechaACompararConLaDeHoy = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]); // Creo una nueva fecha con esas partes
+               
+                if (fechaACompararConLaDeHoy >= hoy) {
 
                     const fecha = elementoDeLista.fechaReserva.split("T")[0];
-                    const hora = elementoDeLista.horarioElegido.slice(11,16);
+                    const hora = elementoDeLista.horarioElegido.slice(11, 16);
 
                     const tarjeta = document.createElement("div")
-                    tarjeta.textContent = `Fecha: ${fecha} - Horario: ${hora}`;
+
+                    tarjeta.classList.add("reserva-card"); //Creo una tarjeta para cada reserva
+             
+                    tarjeta.innerHTML = `<p>Fecha: ${fecha} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
+                    
                     contenedorReservas.appendChild(tarjeta);
 
                 }
-           })
+            })
 
         })
-    
+
         .catch(error => console.error("Error al cargar reservas:", error));
 }
 
 
+function cancelarReserva(idReserva) {
+
+    fetch(`/cancelar/${idReserva}`, {
+        method: "DELETE",
+    })
+        .then((response) => {
+            if (response.ok) {
+                cargarMisReservas(); //Recargo las reservas después de cancelar una
+            } 
+            if(fechaPendiente){
+                generarHorarios(fechaPendiente); //Recargo los horarios si hay una fecha pendiente seleccionada
+            }
+            else {
+                console.error("Error al cancelar la reserva");
+            }
+        })
+        .catch((error) => {
+            console.error("Error en la petición:", error);
+        });
+}
 
 
 

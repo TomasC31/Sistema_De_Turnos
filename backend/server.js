@@ -200,17 +200,24 @@ app.get('/ver-reservas', async (req, res) => {
 
 
 //Para dar de baja el turno
-app.delete('/cancelar/:id', (req, res) => {
-    const idParaBorrar = req.params.id;
-    const indice = reservas.findIndex(reserva => reserva.id == idParaBorrar); //Busco el indice del elemento a borrar
+app.delete('/cancelar/:id', async (req, res) => {
+   
+    const id = req.params.id
 
-    if (indice !== -1) {
-        reservas.splice(indice, 1); //Elimino el elemento del array
-        res.send(`Reserva numero ${idParaBorrar} cancelada correctamente`);
-    }
-    else {
-        res.status(404).send("No se encontró una reserva con ese ID");
-    }
+   try{
+        const request = new sql.Request();
+
+        request.input("idParaBorrar", sql.Int, id)
+        await request.query("DELETE FROM dbo.reservas WHERE id = @idParaBorrar")
+       
+        res.status(200).send("Reserva cancelada correctamente")
+   }
+    
+   catch(err){
+        console.error(err);
+        res.status(500).send("Error del servidor al intentar cancelar una reserva")
+   }
+    
 })
 
 //req = request, solicitud
