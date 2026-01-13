@@ -14,6 +14,38 @@
     object-fit: cover;
 }
 
+
+.contenedor-password-login,
+.contenedor-password-registro {
+    position: relative; 
+    width: 100%;
+}
+
+
+/* El botón del ojo */
+#btn-ver-password-login,
+#btn-ver-password-registro {
+    position: absolute;
+    right: 10px; 
+    top: 50%;       
+    transform: translateY(-50%); 
+    
+    background: none;  
+    border: none;    
+    cursor: pointer;
+    font-size: 18px;    /* Tamaño del emoji */
+    padding: 0;
+    margin-top: 0;
+}
+
+/* Ajustamos el input para que el texto no se escriba encima del ojo */
+.contenedor-password input {
+    width: 100%;
+    padding-right: 40px; /* Dejo espacio a la derecha para el icono */
+}
+
+
+
 /* Para que los botones de iniciar sesión y registrarse estén centrados*/
 .contenedor-principal {
     text-align: center;
@@ -245,12 +277,23 @@ input[type="email"] {
 }
 
 
-
 /* Para las pantallas chicas*/
 @media (max-width: 800px) {
     #contenedor-burbujas {
         flex-direction: column;
         align-items: center;
+    }
+
+    #foto-uruz-principal {
+        height: 200px;       
+        object-fit: cover;  
+        object-position: center; 
+        margin-top: 100px; 
+    }
+
+        #pantalla-inicio {
+        margin-top: 65px; 
+        padding-bottom: 50px; 
     }
 
     .form-tarjeta-fondo {
@@ -267,4 +310,5 @@ input[type="email"] {
         max-width: 90%;
     }
 
+    
 }

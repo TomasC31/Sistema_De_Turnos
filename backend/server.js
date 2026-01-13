@@ -101,6 +101,10 @@ app.post('/reservar', async (req, res) => {
 app.post("/registrar", async (req, res) => {
     const { email, password, nombre } = req.body; //Obtengo los datos del cuerpo de la petición
 
+     if (!nombre || !email || !password) {
+            return res.status(400).send("Faltan datos para registrarse")
+        }
+
     try {
         //Preparamos la conexión y la petición
         const request = new sql.Request();
@@ -108,10 +112,6 @@ app.post("/registrar", async (req, res) => {
         request.input('email', sql.VarChar, email);
         //Le pregunto a la BD si ya conoce el email
         const resultadoBusqueda = await request.query('SELECT * FROM dbo.usuarios WHERE email = @email')
-
-        if (!nombre || !email || !password) {
-            return res.status(400).send("Faltan datos para registrarse")
-        }
 
         //Verifico si encontré a alguien
         if (resultadoBusqueda.recordset.length > 0) {
