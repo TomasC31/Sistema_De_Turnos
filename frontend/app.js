@@ -20,6 +20,8 @@ const btnVerPasswordLogin = document.getElementById("btn-ver-password-login");
 const btnVerPasswordRegistro = document.getElementById("btn-ver-password-registro");
 const inputPasswordLogin = document.getElementById("login-password");
 const inputPasswordRegistro = document.getElementById("registro-password");
+const btnAdminVerReservas = document.getElementById("btn-admin-ver-reservas");
+
 
 const iconoOjoAbierto = `
 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
@@ -134,9 +136,16 @@ formLogin.addEventListener("submit", (e) => {
             }
         })
         .then(datos => {
+
+            console.log("Datos recibidos del servidor:", datos);
+            
             // Verificamos si es el objeto de éxito
             if (datos.mensaje === "Bienvenido") {
-
+                if(datos.rol === "admin"){
+                    btnAdminVerReservas.classList.remove("oculto");
+                }else{
+                    btnAdminVerReservas.classList.add("oculto");
+                }
                 //Ocultamos login y mostramos inicio
                 seccionLogin.classList.add('oculto');
                 pantallaInicio.classList.add('oculto');
@@ -333,7 +342,7 @@ function reservarCancha(fecha, hora, botonHora) {
 
                 mensajeReservaExitosa.classList.remove("mensaje-error");
                 mensajeReservaExitosa.classList.add("mensaje-exito-reserva")
-                mensajeReservaExitosa.textContent = "¡Reserva exitosa para el " + fecha + " a las " + hora + "!";
+                mensajeReservaExitosa.textContent = "¡Reserva exitosa para el " + pasarFechaANombreDiaYNumero(fecha) + " a las " + hora + "!";
                 botonHora.disabled = true; //Deshabilito el botón del horario reservado
                 botonHora.style.backgroundColor = "gray"; //Cambio el color del botón reservado
 
@@ -393,7 +402,7 @@ function cargarMisReservas() {
 
                     tarjeta.classList.add("reserva-card"); //Creo una tarjeta para cada reserva
              
-                    tarjeta.innerHTML = `<p>Fecha: ${fecha} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
+                    tarjeta.innerHTML = `<p>Fecha: ${pasarFechaANombreDiaYNumero(fecha)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
                     
                     contenedorReservas.appendChild(tarjeta);
 
@@ -444,4 +453,13 @@ function emailValido(texto){
     } else {
         return false;
     }
+}
+
+
+//Paso la fecha de formato YYYY-MM-DD a "lunes 5"
+function pasarFechaANombreDiaYNumero(fechaString){
+    const fechaLimpia = fechaString.split("T")[0];
+    const partes = fechaLimpia.split("-")
+    const fechaObj = new Date(partes[0], partes[1] - 1, partes[2]);
+    return fechaObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
 }

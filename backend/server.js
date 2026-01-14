@@ -99,40 +99,45 @@ app.post('/reservar', async (req, res) => {
 
 //Para registrar usuario
 app.post("/registrar", async (req, res) => {
-    const { email, password, nombre } = req.body; //Obtengo los datos del cuerpo de la petición
+    const { email, password, nombre } = req.body; 
 
-     if (!nombre || !email || !password) {
-            return res.status(400).send("Faltan datos para registrarse")
-        }
+    if (!nombre || !email || !password) {
+        return res.status(400).send("Faltan datos para registrarse")
+    }
 
     try {
-        //Preparamos la conexión y la petición
         const request = new sql.Request();
-
+        
+        //Agrego el email siempre, porque lo necesito para buscar si existe
         request.input('email', sql.VarChar, email);
+
         //Le pregunto a la BD si ya conoce el email
         const resultadoBusqueda = await request.query('SELECT * FROM dbo.usuarios WHERE email = @email')
 
-        //Verifico si encontré a alguien
         if (resultadoBusqueda.recordset.length > 0) {
             return res.status(409).send("Usuario ya registrado")
         }
         else {
-            const passwordEncriptada = await bcrypt.hash(password, 10); //Hasheo la contraseña, el 10 es la cantidad de rondas de encriptacion
+            const passwordEncriptada = await bcrypt.hash(password, 10); 
 
-            //Asignamos los parámetros (seguridad contra hackers), el de email esta arriba porque lo necesito para saber si la BD lo tiene guardado
+            //Defino el rol antes de los inputs
+            let rolAguardar = 'usuario';
+            
+            if (email === "uruz@gmail.com") {
+                rolAguardar = 'admin';
+            }
+
             request.input('nombre', sql.VarChar, nombre);
             request.input('password', sql.VarChar, passwordEncriptada);
-            request.input('rol', sql.VarChar, 'usuario');
+            request.input('rol', sql.VarChar, rolAguardar); //Uso la variable que calculo arriba
 
             await request.query('INSERT INTO dbo.usuarios (nombre, email, password, rol) VALUES (@nombre, @email, @password, @rol)');
             res.send(`Te has registrado correctamente con el email ${email}`)
         }
 
     } catch (err) {
-        //Si el email ya existe o hay un error, SQL me avisa
         console.error(err);
-        res.status(409).send("Error al registrar usuario (probablemente el email ya existe)");
+        res.status(500).send("Error al registrar usuario");
     }
 });
 
@@ -179,45 +184,65 @@ app.post("/login", async (req, res) => {
 
 app.get('/ver-reservas', async (req, res) => {
     const nombre = req.query.nombre
-    
-    try{
-    const request = new sql.Request();
-    request.input('nombreCliente', sql.VarChar, nombre);
 
-    const mostrar = await request.query("SELECT * FROM dbo.reservas WHERE nombreCliente = @nombreCliente")
+    try {
+        const request = new sql.Request();
+        request.input('nombreCliente', sql.VarChar, nombre);
 
-    if (mostrar.recordset.length > 0) {
-        return res.status(200).send(mostrar.recordset)
-    }
-    else {
-        res.status(409).send("No hay turnos reservados")
-    }
+        const mostrar = await request.query("SELECT * FROM dbo.reservas WHERE nombreCliente = @nombreCliente")
+
+        if (mostrar.recordset.length > 0) {
+            return res.status(200).send(mostrar.recordset)
+        }
+        else {
+            res.status(409).send("No hay turnos reservados")
+        }
     } catch (err) {
         console.error(err);
         res.status(500).send("Error del servidor al intentar ver las reservas");
     }
 })
 
+app.get('/admin-ver-reservas', async (req, res) => {
+
+    try {
+        const request = new sql.Request();
+
+        const mostrarReservasAdmin = await request.query("SELECT * FROM dbo.reservas")
+
+        if (mostrarReservasAdmin.recordset.length > 0) {
+            return res.status(200).send(mostrarReservasAdmin.recordset)
+        }
+        else {
+            res.status(409).send("No hay turnos reservados")
+        }
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).send("Error del servidor al intentar mostrar las reservas");
+    }
+})
+
 
 //Para dar de baja el turno
 app.delete('/cancelar/:id', async (req, res) => {
-   
+
     const id = req.params.id
 
-   try{
+    try {
         const request = new sql.Request();
 
         request.input("idParaBorrar", sql.Int, id)
         await request.query("DELETE FROM dbo.reservas WHERE id = @idParaBorrar")
-       
+
         res.status(200).send("Reserva cancelada correctamente")
-   }
-    
-   catch(err){
+    }
+
+    catch (err) {
         console.error(err);
         res.status(500).send("Error del servidor al intentar cancelar una reserva")
-   }
-    
+    }
+
 })
 
 //req = request, solicitud
