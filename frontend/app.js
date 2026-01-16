@@ -8,6 +8,7 @@ let botonHorarioPendiente = null; //Guardo el botón del horario seleccionado pa
 const pantallaInicio = document.getElementById("pantalla-inicio");
 const seccionLogin = document.getElementById("seccion-login");
 const seccionRegistro = document.getElementById("seccion-registro");
+const seccionAdmin = document.getElementById("seccion-admin");
 const encabezadoPrincipal = document.getElementById("encabezado-principal");
 
 const btnMostrarLogin = document.getElementById("btn-mostrar-login");
@@ -21,6 +22,7 @@ const btnVerPasswordRegistro = document.getElementById("btn-ver-password-registr
 const inputPasswordLogin = document.getElementById("login-password");
 const inputPasswordRegistro = document.getElementById("registro-password");
 const btnAdminVerReservas = document.getElementById("btn-admin-ver-reservas");
+const btnVolverDeAdminAReservas = document.getElementById("btn-volver-a-reservas");
 
 
 const iconoOjoAbierto = `
@@ -99,13 +101,24 @@ btnVerPasswordLogin.addEventListener('click', () => {
 btnVerPasswordRegistro.innerHTML = iconoOjoAbierto;
 
 btnVerPasswordRegistro.addEventListener('click', () => {
-    if(inputPasswordRegistro.type === "password"){
+    if (inputPasswordRegistro.type === "password") {
         inputPasswordRegistro.type = "text";
         btnVerPasswordRegistro.innerHTML = iconoOjoTachado
-    } else{
+    } else {
         inputPasswordRegistro.type = "password"
         btnVerPasswordRegistro.innerHTML = iconoOjoAbierto
     }
+})
+
+btnAdminVerReservas.addEventListener("click", () => {
+    seccionReservas.classList.add("oculto")
+    seccionAdmin.classList.remove("oculto")
+    traerTodasLasReservas()
+})
+
+btnVolverDeAdminAReservas.addEventListener("click", () => {
+    seccionAdmin.classList.add("oculto")
+    seccionReservas.classList.remove("oculto")
 })
 
 
@@ -137,14 +150,15 @@ formLogin.addEventListener("submit", (e) => {
         })
         .then(datos => {
 
-            console.log("Datos recibidos del servidor:", datos);
-            
+            console.log("Datos recibidos del servidor:", datos); //Para ver si me pone el rol correcto
+
             // Verificamos si es el objeto de éxito
             if (datos.mensaje === "Bienvenido") {
-                if(datos.rol === "admin"){
+                if (datos.rol === "admin") {
                     btnAdminVerReservas.classList.remove("oculto");
-                }else{
+                } else {
                     btnAdminVerReservas.classList.add("oculto");
+                    seccionAdmin.classList.add("oculto");
                 }
                 //Ocultamos login y mostramos inicio
                 seccionLogin.classList.add('oculto');
@@ -192,12 +206,12 @@ formRegister.addEventListener("submit", (e) => {
     const password = document.getElementById("registro-password").value
 
     if (nombre === "" || email === "" || password === "") {
-            mensajeErrorRegistro.textContent = "Por favor, completa todos los campos.";
-            mensajeErrorRegistro.style.color = "red";
-            return;
-        }
+        mensajeErrorRegistro.textContent = "Por favor, completa todos los campos.";
+        mensajeErrorRegistro.style.color = "red";
+        return;
+    }
 
-    if(!emailValido(email)){
+    if (!emailValido(email)) {
         mensajeErrorRegistro.textContent = "El correo no es válido, el formato debe ser: usuario@dominio.com";
         mensajeErrorRegistro.style.color = "red";
         return;
@@ -250,7 +264,6 @@ function generarDias() {
 
         //Cuando hacen click en un dia:
         boton.addEventListener("click", () => {
-
             mensajeReservaExitosa.textContent = ""; //Borro el texto
             mensajeReservaExitosa.classList.remove("mensaje-exito-reserva"); //Saco el color verde
             mensajeReservaExitosa.classList.remove("mensaje-error"); //Saco el color rojo por las dudas
@@ -392,7 +405,7 @@ function cargarMisReservas() {
 
                 const partesFecha = elementoDeLista.fechaReserva.split("T")[0].split("-"); //Divido la fecha en partes [Año, Mes, Día]
                 const fechaACompararConLaDeHoy = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]); // Creo una nueva fecha con esas partes
-               
+
                 if (fechaACompararConLaDeHoy >= hoy) {
 
                     const fecha = elementoDeLista.fechaReserva.split("T")[0];
@@ -401,9 +414,9 @@ function cargarMisReservas() {
                     const tarjeta = document.createElement("div")
 
                     tarjeta.classList.add("reserva-card"); //Creo una tarjeta para cada reserva
-             
+
                     tarjeta.innerHTML = `<p>Fecha: ${pasarFechaANombreDiaYNumero(fecha)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
-                    
+
                     contenedorReservas.appendChild(tarjeta);
 
                 }
@@ -422,14 +435,20 @@ function cancelarReserva(idReserva) {
     })
         .then((response) => {
             if (response.ok) {
-                cargarMisReservas(); //Recargo las reservas después de cancelar una
-            } 
-            if(fechaPendiente){
-                generarHorarios(fechaPendiente); //Recargo los horarios si hay una fecha pendiente seleccionada
+
+                if (seccionAdmin.classList.contains("oculto")) {
+                    cargarMisReservas();
+                } else {
+                    traerTodasLasReservas();
+                    cargarMisReservas();
+                }
+
+                if (fechaPendiente) {
+                    generarHorarios(fechaPendiente); //Recargo los horarios si hay una fecha pendiente seleccionada
+                }
+                
             }
-            else {
-                console.error("Error al cancelar la reserva");
-            }
+
         })
         .catch((error) => {
             console.error("Error en la petición:", error);
@@ -447,8 +466,8 @@ btnReservar.addEventListener("click", () => {
 
 
 
-function emailValido(texto){
-    if (texto.includes("@") && texto.includes(".")){
+function emailValido(texto) {
+    if (texto.includes("@") && texto.includes(".")) {
         return true;
     } else {
         return false;
@@ -457,9 +476,68 @@ function emailValido(texto){
 
 
 //Paso la fecha de formato YYYY-MM-DD a "lunes 5"
-function pasarFechaANombreDiaYNumero(fechaString){
+function pasarFechaANombreDiaYNumero(fechaString) {
     const fechaLimpia = fechaString.split("T")[0];
     const partes = fechaLimpia.split("-")
     const fechaObj = new Date(partes[0], partes[1] - 1, partes[2]);
     return fechaObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
 }
+
+
+function traerTodasLasReservas() {
+    const contenedorReservasAdmin = document.getElementById("lista-reservas-admin");
+
+    contenedorReservasAdmin.innerHTML = ""; //Limpio las reservas anteriores
+
+    fetch('/admin-ver-reservas',
+        { method: 'GET', })
+
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            }
+            else {
+                console.error("Error al buscar las reservas");
+            }
+        })
+        .then((datos) => {
+            console.log("Reservas encontradas:", datos);
+            //Mismo metodo que en cargarMisReservas, me muestra las reservas de hoy en adelante, ordenadas de la más reciente a la más antigua
+            const hoy = new Date()
+            hoy.setHours(0, 0, 0, 0);
+
+            datos.sort((b, a) => {
+                const textoFechaCompletaA = a.fechaReserva.split("T")[0] + "T" + a.horarioElegido.split("T")[1];
+                const textoFechaCompletaB = b.fechaReserva.split("T")[0] + "T" + b.horarioElegido.split("T")[1];
+
+                return new Date(textoFechaCompletaB) - new Date(textoFechaCompletaA);
+            });
+
+            datos.forEach(elementoDeLista => {
+
+                const partesFecha = elementoDeLista.fechaReserva.split("T")[0].split("-"); //Divido la fecha en partes [Año, Mes, Día]
+                const fechaACompararConLaDeHoy = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]); // Creo una nueva fecha con esas partes
+
+                if (fechaACompararConLaDeHoy >= hoy) {
+
+                    const fecha = elementoDeLista.fechaReserva.split("T")[0];
+                    const hora = elementoDeLista.horarioElegido.slice(11, 16);
+
+                    const tarjeta = document.createElement("div")
+
+                    tarjeta.classList.add("reserva-card"); //Creo una tarjeta para cada reserva
+
+                    tarjeta.innerHTML = `<p>Nombre: ${elementoDeLista.nombreCliente} - Fecha: ${pasarFechaANombreDiaYNumero(fecha)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
+
+                    contenedorReservasAdmin.appendChild(tarjeta);
+
+                }
+            })
+        })
+        .catch((error) => {
+            console.error("Error en la petición:", error);
+        })
+}
+
+
+

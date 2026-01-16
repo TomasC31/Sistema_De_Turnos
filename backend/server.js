@@ -245,6 +245,7 @@ app.delete('/cancelar/:id', async (req, res) => {
 
 })
 
+
 //req = request, solicitud
 //res = response, respuesta
 
