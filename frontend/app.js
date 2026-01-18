@@ -3,6 +3,8 @@ let nombreUsuarioActual = ""; //Guardo el nombre del usuario que inició sesión
 let fechaPendiente = ""; //Guardo la fecha seleccionada para reservar
 let horarioPendiente = ""; //Guardo el horario seleccionado para reservar
 let botonHorarioPendiente = null; //Guardo el botón del horario seleccionado para reservar
+let intervaloRecargaReservas = null; //Guardo el intervalo para recargar las reservas
+let intervaloRecargaReservasAdmin = null; //Guardo el intervalo para recargar las reservas en admin
 
 
 const pantallaInicio = document.getElementById("pantalla-inicio");
@@ -114,11 +116,13 @@ btnAdminVerReservas.addEventListener("click", () => {
     seccionReservas.classList.add("oculto")
     seccionAdmin.classList.remove("oculto")
     traerTodasLasReservas()
+    clearInterval(intervaloRecargaReservas) //Si entro a admin, no se actualizan las reservas del usuario normal
 })
 
 btnVolverDeAdminAReservas.addEventListener("click", () => {
     seccionAdmin.classList.add("oculto")
     seccionReservas.classList.remove("oculto")
+    intervaloRecargaReservas = setInterval(cargarMisReservas, 5000); //Recargo las reservas cada 5 segundos
 })
 
 
@@ -170,6 +174,8 @@ formLogin.addEventListener("submit", (e) => {
 
                 nombreUsuarioActual = datos.nombre; //Guardo el nombre del usuario que inició sesión
 
+                intervaloRecargaReservas = setInterval(cargarMisReservas, 5000); //Recargo las reservas cada 5 segundos
+
                 generarDias(); //LLamo a la función para generar los días disponibles
                 cargarMisReservas(); //Cargo las reservas del usuario que inició sesión
 
@@ -193,6 +199,7 @@ btnCerrarSesion.addEventListener("click", () => {
     pantallaInicio.classList.remove("oculto");
     encabezadoPrincipal.classList.remove("oculto");
     mensajeReservaExitosa.textContent = "";
+    clearInterval(intervaloRecargaReservas) //Si vuelvo a inicio, no se actualizan las reservas
 });
 
 
@@ -372,6 +379,8 @@ function reservarCancha(fecha, hora, botonHora) {
             alert("Hubo un problema de conexión.");
         });
 }
+
+
 
 function cargarMisReservas() {
     const contenedorReservas = document.getElementById("panel-izquierda")

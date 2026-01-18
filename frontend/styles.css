@@ -234,7 +234,7 @@ input[type="email"] {
     display: flex;
     flex-wrap: wrap;       /* Si no entran, bajan a la siguiente línea */
     gap: 15px;             /* Esto le da espacio entre cada tarjeta */
-    justify-content: flex-start; /* Se alinean a la izquierda */
+    justify-content: center; /* Se alinean a la izquierda */
     padding: 20px;
 }
 
@@ -277,6 +277,7 @@ input[type="email"] {
 }
 
 
+
 /* Para las pantallas chicas*/
 @media (max-width: 800px) {
     #contenedor-burbujas {
@@ -311,4 +312,23 @@ input[type="email"] {
     }
 
     
+}
+
+#panel-izquierda h3 {
+    width: 100%;       /* Fuerza al título a ocupar toda la línea */
+    text-align: center; /* Opcional: centra el texto */
+    margin-bottom: 20px; /* Separa el título de las tarjetas */
+}
+
+#lista-reservas-admin {
+   display: grid;
+   grid-template-columns: 1fr 1fr 1fr;
+   gap: 20px;
+   justify-items: center;
+}
+
+#btn-volver-a-reservas {
+   margin: 25px;
+   text-align: center;
+
 }
