@@ -367,8 +367,7 @@ function reservarCancha(fecha, hora, botonHora) {
                 botonHora.style.backgroundColor = "gray"; //Cambio el color del botón reservado
 
             } else {
-
-                mensajeReservaExitosa.textContent = "Ese turno ya fue reservado por otro usuario. Por favor, elige otro horario.";
+                mensajeReservaExitosa.textContent = datos;
                 mensajeReservaExitosa.classList.remove("mensaje-exito-reserva")
                 mensajeReservaExitosa.classList.add("mensaje-error");
 

@@ -70,180 +70,190 @@ app.get('/horarios', async (req, res) => {
 //Para reservar el turno
 app.post('/reservar', async (req, res) => {
 
-    const { nombre, fecha, horario } = req.body;
-
-    if (!nombre || !fecha || !horario) {
-        res.status(400).send('Faltan datos para procesar la reserva');
-        return;
-    }
-
-    const request = new sql.Request(); //Sirve para hacer consultas a la base de datos
-
-    request.input("fecha", sql.Date, req.body.fecha);
-    request.input("horario", sql.VarChar, req.body.horario);
-
-    const validarTurno = await request.query("SELECT * FROM dbo.reservas WHERE fechaReserva = @fecha AND horarioElegido = @horario");
-
-
-
-    if (validarTurno.recordset.length > 0) {
-        return res.status(409).send("Turno ocupado")
-    }
-    else {
-        request.input("nombre", sql.VarChar, req.body.nombre);
-
-        await request.query("INSERT INTO dbo.reservas (nombreCliente, fechaReserva, horarioElegido) VALUES (@nombre, @fecha, @horario)")
-        res.send("El turno se guardó correctamente")
-    }
-})
-
-//Para registrar usuario
-app.post("/registrar", async (req, res) => {
-    const { email, password, nombre } = req.body; 
-
-    if (!nombre || !email || !password) {
-        return res.status(400).send("Faltan datos para registrarse")
-    }
-
     try {
-        const request = new sql.Request();
-        
-        //Agrego el email siempre, porque lo necesito para buscar si existe
-        request.input('email', sql.VarChar, email);
 
-        //Le pregunto a la BD si ya conoce el email
-        const resultadoBusqueda = await request.query('SELECT * FROM dbo.usuarios WHERE email = @email')
+        const { nombre, fecha, horario } = req.body;
 
-        if (resultadoBusqueda.recordset.length > 0) {
-            return res.status(409).send("Usuario ya registrado")
+        if (!nombre || !fecha || !horario) {
+            res.status(400).send('Faltan datos para procesar la reserva');
+            return;
+        }
+
+        const request = new sql.Request(); //Sirve para hacer consultas a la base de datos
+
+        request.input("fecha", sql.Date, req.body.fecha);
+        request.input("horario", sql.VarChar, req.body.horario);
+
+        const validarTurno = await request.query("SELECT * FROM dbo.reservas WHERE fechaReserva = @fecha AND horarioElegido = @horario");
+
+        if (validarTurno.recordset.length > 0) {
+            return res.status(409).send("Turno ocupado")
         }
         else {
-            const passwordEncriptada = await bcrypt.hash(password, 10); 
+            request.input("nombre", sql.VarChar, req.body.nombre);
 
-            //Defino el rol antes de los inputs
-            let rolAguardar = 'usuario';
-            
-            if (email === "uruz@gmail.com") {
-                rolAguardar = 'admin';
-            }
-
-            request.input('nombre', sql.VarChar, nombre);
-            request.input('password', sql.VarChar, passwordEncriptada);
-            request.input('rol', sql.VarChar, rolAguardar); //Uso la variable que calculo arriba
-
-            await request.query('INSERT INTO dbo.usuarios (nombre, email, password, rol) VALUES (@nombre, @email, @password, @rol)');
-            res.send(`Te has registrado correctamente con el email ${email}`)
+            await request.query("INSERT INTO dbo.reservas (nombreCliente, fechaReserva, horarioElegido) VALUES (@nombre, @fecha, @horario)")
+            res.send("El turno se guardó correctamente")
         }
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error al registrar usuario");
+    }
+    catch (err) {
+        if (err.number === 2627){
+            return res.status(409).send("Error al intentar reservar el turno, seguramente intentaste reservar el turno al mismo tiempo que otro usuario");
+        }else{
+            console.error(err);
+            return res.status(500).send("Error al intentar reservar el turno");
+        }
     }
 });
 
 
-//Para loguear usuario
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
+//Para registrar usuario
+app.post("/registrar", async (req, res) => {
+        const { email, password, nombre } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).send("Faltan datos para iniciar sesión")
-    }
-
-    try {
-        const request = new sql.Request();
-        request.input('email', sql.VarChar, email);
-
-        const validacion = await request.query('SELECT * FROM dbo.usuarios WHERE email = @email')
-
-        if (validacion.recordset.length === 0) {
-            return res.status(404).send("Email no encontrado")
+        if (!nombre || !email || !password) {
+            return res.status(400).send("Faltan datos para registrarse")
         }
-        else {
-            const usuario = validacion.recordset[0] //Obtengo el primer (y único) resultado de la consulta
-            const passwordEnBD = usuario.password; //Obtengo la contraseña hasheada que está en la BD
 
-            const coincidenLasContraseñas = await bcrypt.compare(password, passwordEnBD)
+        try {
+            const request = new sql.Request();
 
-            if (coincidenLasContraseñas === true) {
-                res.json({
-                    mensaje: "Bienvenido",
-                    nombre: usuario.nombre,
-                    rol: usuario.rol
-                })
+            //Agrego el email siempre, porque lo necesito para buscar si existe
+            request.input('email', sql.VarChar, email);
+
+            //Le pregunto a la BD si ya conoce el email
+            const resultadoBusqueda = await request.query('SELECT * FROM dbo.usuarios WHERE email = @email')
+
+            if (resultadoBusqueda.recordset.length > 0) {
+                return res.status(409).send("Usuario ya registrado")
             }
             else {
-                res.status(401).send("Usuario o contraseña incorrecta")
+                const passwordEncriptada = await bcrypt.hash(password, 10);
+
+                //Defino el rol antes de los inputs
+                let rolAguardar = 'usuario';
+
+                if (email === "uruz@gmail.com") {
+                    rolAguardar = 'admin';
+                }
+
+                request.input('nombre', sql.VarChar, nombre);
+                request.input('password', sql.VarChar, passwordEncriptada);
+                request.input('rol', sql.VarChar, rolAguardar); //Uso la variable que calculo arriba
+
+                await request.query('INSERT INTO dbo.usuarios (nombre, email, password, rol) VALUES (@nombre, @email, @password, @rol)');
+                res.send(`Te has registrado correctamente con el email ${email}`)
+            }
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error al registrar usuario");
+        }
+    });
+
+
+    //Para loguear usuario
+    app.post("/login", async (req, res) => {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).send("Faltan datos para iniciar sesión")
+        }
+
+        try {
+            const request = new sql.Request();
+            request.input('email', sql.VarChar, email);
+
+            const validacion = await request.query('SELECT * FROM dbo.usuarios WHERE email = @email')
+
+            if (validacion.recordset.length === 0) {
+                return res.status(404).send("Email no encontrado")
+            }
+            else {
+                const usuario = validacion.recordset[0] //Obtengo el primer (y único) resultado de la consulta
+                const passwordEnBD = usuario.password; //Obtengo la contraseña hasheada que está en la BD
+
+                const coincidenLasContraseñas = await bcrypt.compare(password, passwordEnBD)
+
+                if (coincidenLasContraseñas === true) {
+                    res.json({
+                        mensaje: "Bienvenido",
+                        nombre: usuario.nombre,
+                        rol: usuario.rol
+                    })
+                }
+                else {
+                    res.status(401).send("Usuario o contraseña incorrecta")
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error del servidor al intentar iniciar sesión");
+        }
+    })
+
+    app.get('/ver-reservas', async (req, res) => {
+        const nombre = req.query.nombre
+
+        try {
+            const request = new sql.Request();
+            request.input('nombreCliente', sql.VarChar, nombre);
+
+            const mostrar = await request.query("SELECT * FROM dbo.reservas WHERE nombreCliente = @nombreCliente")
+
+            if (mostrar.recordset.length > 0) {
+                return res.status(200).send(mostrar.recordset)
+            }
+            else {
+                res.status(409).send("No hay turnos reservados")
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error del servidor al intentar ver las reservas");
+        }
+    })
+
+    app.get('/admin-ver-reservas', async (req, res) => {
+
+        try {
+            const request = new sql.Request();
+
+            const mostrarReservasAdmin = await request.query("SELECT * FROM dbo.reservas")
+
+            if (mostrarReservasAdmin.recordset.length > 0) {
+                return res.status(200).send(mostrarReservasAdmin.recordset)
+            }
+            else {
+                res.status(409).send("No hay turnos reservados")
             }
         }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error del servidor al intentar iniciar sesión");
-    }
-})
-
-app.get('/ver-reservas', async (req, res) => {
-    const nombre = req.query.nombre
-
-    try {
-        const request = new sql.Request();
-        request.input('nombreCliente', sql.VarChar, nombre);
-
-        const mostrar = await request.query("SELECT * FROM dbo.reservas WHERE nombreCliente = @nombreCliente")
-
-        if (mostrar.recordset.length > 0) {
-            return res.status(200).send(mostrar.recordset)
+        catch (err) {
+            console.error(err);
+            res.status(500).send("Error del servidor al intentar mostrar las reservas");
         }
-        else {
-            res.status(409).send("No hay turnos reservados")
+    })
+
+
+    //Para dar de baja el turno
+    app.delete('/cancelar/:id', async (req, res) => {
+
+        const id = req.params.id
+
+        try {
+            const request = new sql.Request();
+
+            request.input("idParaBorrar", sql.Int, id)
+            await request.query("DELETE FROM dbo.reservas WHERE id = @idParaBorrar")
+
+            res.status(200).send("Reserva cancelada correctamente")
         }
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error del servidor al intentar ver las reservas");
-    }
-})
 
-app.get('/admin-ver-reservas', async (req, res) => {
-
-    try {
-        const request = new sql.Request();
-
-        const mostrarReservasAdmin = await request.query("SELECT * FROM dbo.reservas")
-
-        if (mostrarReservasAdmin.recordset.length > 0) {
-            return res.status(200).send(mostrarReservasAdmin.recordset)
+        catch (err) {
+            console.error(err);
+            res.status(500).send("Error del servidor al intentar cancelar una reserva")
         }
-        else {
-            res.status(409).send("No hay turnos reservados")
-        }
-    }
-    catch (err) {
-        console.error(err);
-        res.status(500).send("Error del servidor al intentar mostrar las reservas");
-    }
-})
 
-
-//Para dar de baja el turno
-app.delete('/cancelar/:id', async (req, res) => {
-
-    const id = req.params.id
-
-    try {
-        const request = new sql.Request();
-
-        request.input("idParaBorrar", sql.Int, id)
-        await request.query("DELETE FROM dbo.reservas WHERE id = @idParaBorrar")
-
-        res.status(200).send("Reserva cancelada correctamente")
-    }
-
-    catch (err) {
-        console.error(err);
-        res.status(500).send("Error del servidor al intentar cancelar una reserva")
-    }
-
-})
+    })
 
 
 //req = request, solicitud
