@@ -1,6 +1,7 @@
 const express = require('express'); //Importo express, sirve para crear el servidor
 const app = express(); //Inicializo express, ahora app tiene todas las funcionalidades de express
-const sql = require('mssql'); //Para conectarme a SQL Server
+require('dotenv').config({ path: '../.env' }); //Importo dotenv para manejar variables de entorno
+const { Pool } = require('pg'); //Para conectarme a PostgreSQL
 const bcrypt = require('bcrypt'); //Importo bcrypt, sirve para hashear contraseñas
 const path = require('path'); //Para manejar rutas de archivos
 
@@ -10,23 +11,18 @@ app.use(express.static(path.join(__dirname, '../frontend'))); //Sirve para que e
 
 //-------- CONFIGURACIÓN DE LA BASE DE DATOS -----------------------------
 
-const config = {
-    user: 'admin_canchita',
-    password: '46652130Tomi',
-    server: 'localhost',
-    port: 63801,
-    database: 'sistemaTurnos',
-    options: {
-        trustServerCertificate: true,
-        encrypt: false
+const pool = new Pool({
+    // Aquí pegaremos el link que nos de Neon.tech
+    connectionString:process.env.DATABASE_URL, 
+    ssl: {
+        rejectUnauthorized: false //Obligatorio para que funcione en la nube
     }
-};
+});
 
 // --- CONEXIÓN ---
-sql.connect(config)
-    .then(resultado => {
-        pool = resultado
-        console.log('¡Conexión a SQL Server exitosa! 🟢');
+pool.connect()
+    .then(() => {
+        console.log('¡Conexión a PostgreSQL exitosa! 🟢');
 
         // Encendemos el servidor web
         app.listen(3000, () => {
@@ -40,7 +36,6 @@ sql.connect(config)
 //---------------------------------------------------------------------------------------------------------
 
 //Variables Globales
-let pool;
 const reservas = []; //Base de datos provisoria
 let contadorDeId = 0;
 
@@ -51,14 +46,9 @@ app.get('/horarios', async (req, res) => {
     const fechaConsultada = req.query.fecha;
     const horarioConsultado = req.query.horario;
 
-    const request = await pool.request();
+    const validar = await pool.query("SELECT * FROM reservas WHERE fechaReserva = $1 AND horarioElegido = $2", [fechaConsultada, horarioConsultado]);
 
-    request.input("fecha", sql.Date, fechaConsultada)
-    request.input("horario", sql.VarChar, horarioConsultado)
-
-    const validar = await request.query("SELECT * FROM dbo.reservas WHERE fechaReserva = @fecha AND horarioElegido = @horario");
-
-    if (validar.recordset.length > 0) {
+    if (validar.rows.length > 0) {
         return res.status(409).send("Turno ocupado")
     }
     else {
@@ -79,25 +69,18 @@ app.post('/reservar', async (req, res) => {
             return;
         }
 
-        const request = new sql.Request(); //Sirve para hacer consultas a la base de datos
+        const validarTurno = await pool.query("SELECT * FROM reservas WHERE fechaReserva = $1 AND horarioElegido = $2", [fecha, horario]);
 
-        request.input("fecha", sql.Date, req.body.fecha);
-        request.input("horario", sql.VarChar, req.body.horario);
-
-        const validarTurno = await request.query("SELECT * FROM dbo.reservas WHERE fechaReserva = @fecha AND horarioElegido = @horario");
-
-        if (validarTurno.recordset.length > 0) {
+        if (validarTurno.rows.length > 0) {
             return res.status(409).send("Turno ocupado")
         }
         else {
-            request.input("nombre", sql.VarChar, req.body.nombre);
-
-            await request.query("INSERT INTO dbo.reservas (nombreCliente, fechaReserva, horarioElegido) VALUES (@nombre, @fecha, @horario)")
+            await pool.query("INSERT INTO reservas (nombreCliente, fechaReserva, horarioElegido) VALUES ($1, $2, $3)", [nombre, fecha, horario]);
             res.send("El turno se guardó correctamente")
         }
     }
     catch (err) {
-        if (err.number === 2627){
+        if (err.code === '23505'){
             return res.status(409).send("Error al intentar reservar el turno, seguramente intentaste reservar el turno al mismo tiempo que otro usuario");
         }else{
             console.error(err);
@@ -116,15 +99,10 @@ app.post("/registrar", async (req, res) => {
         }
 
         try {
-            const request = new sql.Request();
-
-            //Agrego el email siempre, porque lo necesito para buscar si existe
-            request.input('email', sql.VarChar, email);
-
             //Le pregunto a la BD si ya conoce el email
-            const resultadoBusqueda = await request.query('SELECT * FROM dbo.usuarios WHERE email = @email')
+            const resultadoBusqueda = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
 
-            if (resultadoBusqueda.recordset.length > 0) {
+            if (resultadoBusqueda.rows.length > 0) {
                 return res.status(409).send("Usuario ya registrado")
             }
             else {
@@ -137,11 +115,7 @@ app.post("/registrar", async (req, res) => {
                     rolAguardar = 'admin';
                 }
 
-                request.input('nombre', sql.VarChar, nombre);
-                request.input('password', sql.VarChar, passwordEncriptada);
-                request.input('rol', sql.VarChar, rolAguardar); //Uso la variable que calculo arriba
-
-                await request.query('INSERT INTO dbo.usuarios (nombre, email, password, rol) VALUES (@nombre, @email, @password, @rol)');
+                await pool.query('INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4)', [nombre, email, passwordEncriptada, rolAguardar]);
                 res.send(`Te has registrado correctamente con el email ${email}`)
             }
 
@@ -161,16 +135,13 @@ app.post("/registrar", async (req, res) => {
         }
 
         try {
-            const request = new sql.Request();
-            request.input('email', sql.VarChar, email);
+            const validacion = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
 
-            const validacion = await request.query('SELECT * FROM dbo.usuarios WHERE email = @email')
-
-            if (validacion.recordset.length === 0) {
+            if (validacion.rows.length === 0) {
                 return res.status(404).send("Email no encontrado")
             }
             else {
-                const usuario = validacion.recordset[0] //Obtengo el primer (y único) resultado de la consulta
+                const usuario = validacion.rows[0] //Obtengo el primer (y único) resultado de la consulta
                 const passwordEnBD = usuario.password; //Obtengo la contraseña hasheada que está en la BD
 
                 const coincidenLasContraseñas = await bcrypt.compare(password, passwordEnBD)
@@ -196,13 +167,10 @@ app.post("/registrar", async (req, res) => {
         const nombre = req.query.nombre
 
         try {
-            const request = new sql.Request();
-            request.input('nombreCliente', sql.VarChar, nombre);
+            const mostrar = await pool.query("SELECT * FROM reservas WHERE nombreCliente = $1", [nombre]);
 
-            const mostrar = await request.query("SELECT * FROM dbo.reservas WHERE nombreCliente = @nombreCliente")
-
-            if (mostrar.recordset.length > 0) {
-                return res.status(200).send(mostrar.recordset)
+            if (mostrar.rows.length > 0) {
+                return res.status(200).send(mostrar.rows)
             }
             else {
                 res.status(409).send("No hay turnos reservados")
@@ -216,12 +184,10 @@ app.post("/registrar", async (req, res) => {
     app.get('/admin-ver-reservas', async (req, res) => {
 
         try {
-            const request = new sql.Request();
+            const mostrarReservasAdmin = await pool.query("SELECT * FROM reservas");
 
-            const mostrarReservasAdmin = await request.query("SELECT * FROM dbo.reservas")
-
-            if (mostrarReservasAdmin.recordset.length > 0) {
-                return res.status(200).send(mostrarReservasAdmin.recordset)
+            if (mostrarReservasAdmin.rows.length > 0) {
+                return res.status(200).send(mostrarReservasAdmin.rows)
             }
             else {
                 res.status(409).send("No hay turnos reservados")
@@ -240,10 +206,7 @@ app.post("/registrar", async (req, res) => {
         const id = req.params.id
 
         try {
-            const request = new sql.Request();
-
-            request.input("idParaBorrar", sql.Int, id)
-            await request.query("DELETE FROM dbo.reservas WHERE id = @idParaBorrar")
+            await pool.query("DELETE FROM reservas WHERE id = $1", [id]);
 
             res.status(200).send("Reserva cancelada correctamente")
         }
