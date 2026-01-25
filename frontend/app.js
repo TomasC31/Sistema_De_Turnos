@@ -383,10 +383,11 @@ function reservarCancha(fecha, hora, botonHora) {
 
 function cargarMisReservas() {
     const contenedorReservas = document.getElementById("panel-izquierda")
-
+    const nombreCodificado = encodeURIComponent(nombreUsuarioActual); // Esto es para que funcione si el nombre tiene espacios
+    
     contenedorReservas.innerHTML = "<h3>Mis Reservas</h3>"; //Limpio las reservas anteriores, y le ponogo un titulo
 
-    fetch(`/ver-reservas?nombre=${nombreUsuarioActual}`)
+    fetch(`/ver-reservas?nombre=${nombreCodificado}`)
         .then(response => {
             if (response.ok) {
                 return response.json(); //Si sale bien, muestro el JSON
@@ -396,34 +397,44 @@ function cargarMisReservas() {
             }
         })
         .then(listaReservas => {
-            console.log("Reservas encontradas:", listaReservas);
+            contenedorReservas.innerHTML = "<h3>Mis Reservas</h3>"; // Limpio y pongo título
 
             const hoy = new Date()
             hoy.setHours(0, 0, 0, 0); //Pongo la hora a 00:00 para comparar solo fechas y que en el if no falle
 
             //Ordeno las reservas de la más reciente a la más antigua mirando las fechas y horarios
-            listaReservas.sort((b, a) => {
-                const textoFechaCompletaA = a.fechaReserva.split("T")[0] + "T" + a.horarioElegido.split("T")[1];
-                const textoFechaCompletaB = b.fechaReserva.split("T")[0] + "T" + b.horarioElegido.split("T")[1];
+            listaReservas.sort((a, b) => {
+                const fechaA = new Date(a.fechaReserva);
+                const fechaB = new Date(b.fechaReserva);
 
-                return new Date(textoFechaCompletaB) - new Date(textoFechaCompletaA);
+                if (fechaA.getTime() !== fechaB.getTime()){
+                    return fechaA - fechaB
+                }
+                //Si es el mismo dia, comparo la hora
+                return a.horarioElegido.localeCompare(b.horarioElegido)
             });
 
             listaReservas.forEach(elementoDeLista => {
 
-                const partesFecha = elementoDeLista.fechaReserva.split("T")[0].split("-"); //Divido la fecha en partes [Año, Mes, Día]
-                const fechaACompararConLaDeHoy = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]); // Creo una nueva fecha con esas partes
+                let fechaTexto = elementoDeLista.fechaReserva;
+
+                if (typeof fechaTexto === 'string' && fechaTexto.includes('T')){
+                    fechaTexto = fechaTexto.split("T")[0];
+                }
+
+                const partesFecha = fechaTexto.split("-");
+                const fechaACompararConLaDeHoy = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]);
+
 
                 if (fechaACompararConLaDeHoy >= hoy) {
 
-                    const fecha = elementoDeLista.fechaReserva.split("T")[0];
-                    const hora = elementoDeLista.horarioElegido.slice(11, 16);
+                    const hora = elementoDeLista.horarioElegido;
 
                     const tarjeta = document.createElement("div")
 
                     tarjeta.classList.add("reserva-card"); //Creo una tarjeta para cada reserva
 
-                    tarjeta.innerHTML = `<p>Fecha: ${pasarFechaANombreDiaYNumero(fecha)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
+                    tarjeta.innerHTML = `<p>Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
 
                     contenedorReservas.appendChild(tarjeta);
 
@@ -514,31 +525,35 @@ function traerTodasLasReservas() {
             const hoy = new Date()
             hoy.setHours(0, 0, 0, 0);
 
-            datos.sort((b, a) => {
-                const textoFechaCompletaA = a.fechaReserva.split("T")[0] + "T" + a.horarioElegido.split("T")[1];
-                const textoFechaCompletaB = b.fechaReserva.split("T")[0] + "T" + b.horarioElegido.split("T")[1];
+            datos.sort((a, b) => {
+                const fechaA = new Date(a.fechaReserva);
+                const fechaB = new Date(b.fechaReserva);
 
-                return new Date(textoFechaCompletaB) - new Date(textoFechaCompletaA);
+                if (fechaA.getTime() !== fechaB.getTime()){
+                    return fechaA - fechaB
+                }
+
+                return a.horarioElegido.localeCompare(b.horarioElegido)
             });
 
             datos.forEach(elementoDeLista => {
+                let fechaTexto = elementoDeLista.fechaReserva;
+                if (typeof fechaTexto === 'string' && fechaTexto.includes('T')){
+                    fechaTexto = fechaTexto.split("T")[0];
+                }
 
-                const partesFecha = elementoDeLista.fechaReserva.split("T")[0].split("-"); //Divido la fecha en partes [Año, Mes, Día]
-                const fechaACompararConLaDeHoy = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]); // Creo una nueva fecha con esas partes
+                const partesFecha = fechaTexto.split("-");
+                const fechaACompararConLaDeHoy = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]);
 
                 if (fechaACompararConLaDeHoy >= hoy) {
-
-                    const fecha = elementoDeLista.fechaReserva.split("T")[0];
-                    const hora = elementoDeLista.horarioElegido.slice(11, 16);
+                    const hora = elementoDeLista.horarioElegido;
 
                     const tarjeta = document.createElement("div")
+                    tarjeta.classList.add("reserva-card"); 
 
-                    tarjeta.classList.add("reserva-card"); //Creo una tarjeta para cada reserva
-
-                    tarjeta.innerHTML = `<p>Nombre: ${elementoDeLista.nombreCliente} - Fecha: ${pasarFechaANombreDiaYNumero(fecha)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
+                    tarjeta.innerHTML = `<p>Nombre: ${elementoDeLista.nombreCliente} - Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; 
 
                     contenedorReservasAdmin.appendChild(tarjeta);
-
                 }
             })
         })
