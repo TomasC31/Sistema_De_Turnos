@@ -404,19 +404,19 @@ function cargarMisReservas() {
 
             //Ordeno las reservas de la más reciente a la más antigua mirando las fechas y horarios
             listaReservas.sort((a, b) => {
-                const fechaA = new Date(a.fechaReserva);
-                const fechaB = new Date(b.fechaReserva);
+                const fechaA = new Date(a.fechareserva);
+                const fechaB = new Date(b.fechareserva);
 
                 if (fechaA.getTime() !== fechaB.getTime()){
                     return fechaA - fechaB
                 }
                 //Si es el mismo dia, comparo la hora
-                return a.horarioElegido.localeCompare(b.horarioElegido)
+                return a.horarioelegido.localeCompare(b.horarioelegido)
             });
 
             listaReservas.forEach(elementoDeLista => {
 
-                let fechaTexto = elementoDeLista.fechaReserva;
+                let fechaTexto = elementoDeLista.fechareserva;
 
                 if (typeof fechaTexto === 'string' && fechaTexto.includes('T')){
                     fechaTexto = fechaTexto.split("T")[0];
@@ -428,7 +428,7 @@ function cargarMisReservas() {
 
                 if (fechaACompararConLaDeHoy >= hoy) {
 
-                    const hora = elementoDeLista.horarioElegido;
+                    const hora = elementoDeLista.horarioelegido;
 
                     const tarjeta = document.createElement("div")
 
@@ -526,18 +526,18 @@ function traerTodasLasReservas() {
             hoy.setHours(0, 0, 0, 0);
 
             datos.sort((a, b) => {
-                const fechaA = new Date(a.fechaReserva);
-                const fechaB = new Date(b.fechaReserva);
+                const fechaA = new Date(a.fechareserva);
+                const fechaB = new Date(b.fechareserva);
 
                 if (fechaA.getTime() !== fechaB.getTime()){
                     return fechaA - fechaB
                 }
 
-                return a.horarioElegido.localeCompare(b.horarioElegido)
+                return a.horarioelegido.localeCompare(b.horarioelegido)
             });
 
             datos.forEach(elementoDeLista => {
-                let fechaTexto = elementoDeLista.fechaReserva;
+                let fechaTexto = elementoDeLista.fechareserva;
                 if (typeof fechaTexto === 'string' && fechaTexto.includes('T')){
                     fechaTexto = fechaTexto.split("T")[0];
                 }
@@ -546,12 +546,12 @@ function traerTodasLasReservas() {
                 const fechaACompararConLaDeHoy = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]);
 
                 if (fechaACompararConLaDeHoy >= hoy) {
-                    const hora = elementoDeLista.horarioElegido;
+                    const hora = elementoDeLista.horarioelegido;
 
                     const tarjeta = document.createElement("div")
                     tarjeta.classList.add("reserva-card"); 
 
-                    tarjeta.innerHTML = `<p>Nombre: ${elementoDeLista.nombreCliente} - Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; 
+                    tarjeta.innerHTML = `<p>Nombre: ${elementoDeLista.nombrecliente} - Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; 
 
                     contenedorReservasAdmin.appendChild(tarjeta);
                 }
