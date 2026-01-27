@@ -3,8 +3,6 @@ let nombreUsuarioActual = ""; //Guardo el nombre del usuario que inició sesión
 let fechaPendiente = ""; //Guardo la fecha seleccionada para reservar
 let horarioPendiente = ""; //Guardo el horario seleccionado para reservar
 let botonHorarioPendiente = null; //Guardo el botón del horario seleccionado para reservar
-let intervaloRecargaReservas = null; //Guardo el intervalo para recargar las reservas
-let intervaloRecargaReservasAdmin = null; //Guardo el intervalo para recargar las reservas en admin
 
 
 const pantallaInicio = document.getElementById("pantalla-inicio");
@@ -116,14 +114,13 @@ btnAdminVerReservas.addEventListener("click", () => {
     seccionReservas.classList.add("oculto")
     seccionAdmin.classList.remove("oculto")
     traerTodasLasReservas()
-    clearInterval(intervaloRecargaReservas) //Si entro a admin, no se actualizan las reservas del usuario normal
 })
 
 btnVolverDeAdminAReservas.addEventListener("click", () => {
     seccionAdmin.classList.add("oculto")
     seccionReservas.classList.remove("oculto")
-    intervaloRecargaReservas = setInterval(cargarMisReservas, 5000); //Recargo las reservas cada 5 segundos
 })
+
 
 
 
@@ -174,7 +171,6 @@ formLogin.addEventListener("submit", (e) => {
 
                 nombreUsuarioActual = datos.nombre; //Guardo el nombre del usuario que inició sesión
 
-                intervaloRecargaReservas = setInterval(cargarMisReservas, 5000); //Recargo las reservas cada 5 segundos
 
                 generarDias(); //LLamo a la función para generar los días disponibles
                 cargarMisReservas(); //Cargo las reservas del usuario que inició sesión
@@ -384,8 +380,16 @@ function reservarCancha(fecha, hora, botonHora) {
 function cargarMisReservas() {
     const contenedorReservas = document.getElementById("panel-izquierda")
     const nombreCodificado = encodeURIComponent(nombreUsuarioActual); // Esto es para que funcione si el nombre tiene espacios
-    
-    contenedorReservas.innerHTML = "<h3>Mis Reservas</h3>"; //Limpio las reservas anteriores, y le ponogo un titulo
+
+    contenedorReservas.innerHTML = `
+    <h3>Mis Reservas</h3>
+    <button id="btn-actualizar-reservas" class="btn-inicio btn-actualizar">Actualizar reservas</button>`;
+
+    const btnActualizarReservas = document.getElementById("btn-actualizar-reservas");
+
+    btnActualizarReservas.addEventListener("click", () => {
+        cargarMisReservas();
+    })
 
     fetch(`/ver-reservas?nombre=${nombreCodificado}`)
         .then(response => {
@@ -397,8 +401,7 @@ function cargarMisReservas() {
             }
         })
         .then(listaReservas => {
-            contenedorReservas.innerHTML = "<h3>Mis Reservas</h3>"; // Limpio y pongo título
-
+            
             const hoy = new Date()
             hoy.setHours(0, 0, 0, 0); //Pongo la hora a 00:00 para comparar solo fechas y que en el if no falle
 
@@ -407,7 +410,7 @@ function cargarMisReservas() {
                 const fechaA = new Date(a.fechareserva);
                 const fechaB = new Date(b.fechareserva);
 
-                if (fechaA.getTime() !== fechaB.getTime()){
+                if (fechaA.getTime() !== fechaB.getTime()) {
                     return fechaA - fechaB
                 }
                 //Si es el mismo dia, comparo la hora
@@ -418,7 +421,7 @@ function cargarMisReservas() {
 
                 let fechaTexto = elementoDeLista.fechareserva;
 
-                if (typeof fechaTexto === 'string' && fechaTexto.includes('T')){
+                if (typeof fechaTexto === 'string' && fechaTexto.includes('T')) {
                     fechaTexto = fechaTexto.split("T")[0];
                 }
 
@@ -465,7 +468,7 @@ function cancelarReserva(idReserva) {
                 if (fechaPendiente) {
                     generarHorarios(fechaPendiente); //Recargo los horarios si hay una fecha pendiente seleccionada
                 }
-                
+
             }
 
         })
@@ -529,7 +532,7 @@ function traerTodasLasReservas() {
                 const fechaA = new Date(a.fechareserva);
                 const fechaB = new Date(b.fechareserva);
 
-                if (fechaA.getTime() !== fechaB.getTime()){
+                if (fechaA.getTime() !== fechaB.getTime()) {
                     return fechaA - fechaB
                 }
 
@@ -538,7 +541,7 @@ function traerTodasLasReservas() {
 
             datos.forEach(elementoDeLista => {
                 let fechaTexto = elementoDeLista.fechareserva;
-                if (typeof fechaTexto === 'string' && fechaTexto.includes('T')){
+                if (typeof fechaTexto === 'string' && fechaTexto.includes('T')) {
                     fechaTexto = fechaTexto.split("T")[0];
                 }
 
@@ -549,9 +552,9 @@ function traerTodasLasReservas() {
                     const hora = elementoDeLista.horarioelegido;
 
                     const tarjeta = document.createElement("div")
-                    tarjeta.classList.add("reserva-card"); 
+                    tarjeta.classList.add("reserva-card");
 
-                    tarjeta.innerHTML = `<p>Nombre: ${elementoDeLista.nombrecliente} - Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; 
+                    tarjeta.innerHTML = `<p>Nombre: ${elementoDeLista.nombrecliente} - Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`;
 
                     contenedorReservasAdmin.appendChild(tarjeta);
                 }
