@@ -3,13 +3,14 @@ let nombreUsuarioActual = ""; //Guardo el nombre del usuario que inició sesión
 let fechaPendiente = ""; //Guardo la fecha seleccionada para reservar
 let horarioPendiente = ""; //Guardo el horario seleccionado para reservar
 let botonHorarioPendiente = null; //Guardo el botón del horario seleccionado para reservar
-
+let deporteElegido = ""; //Guardo el deporte elegido por el usuario
 
 const pantallaInicio = document.getElementById("pantalla-inicio");
 const seccionLogin = document.getElementById("seccion-login");
 const seccionRegistro = document.getElementById("seccion-registro");
 const seccionAdmin = document.getElementById("seccion-admin");
 const encabezadoPrincipal = document.getElementById("encabezado-principal");
+const seccionElegirDeporte = document.getElementById("seccion-elegir-deporte");
 
 const btnMostrarLogin = document.getElementById("btn-mostrar-login");
 const btnMostrarRegistro = document.getElementById("btn-mostrar-registro");
@@ -23,6 +24,10 @@ const inputPasswordLogin = document.getElementById("login-password");
 const inputPasswordRegistro = document.getElementById("registro-password");
 const btnAdminVerReservas = document.getElementById("btn-admin-ver-reservas");
 const btnVolverDeAdminAReservas = document.getElementById("btn-volver-a-reservas");
+const btnFutbol5 = document.getElementById("btn-futbol5");
+const btnPadel = document.getElementById("btn-padel");
+const btnVolverDeporteAInicio = document.getElementById("btn-volver-deporte-a-inicio");
+const btnVolverDeReservasADeporte = document.getElementById("btn-volver-a-elegir-deporte");
 
 
 const iconoOjoAbierto = `
@@ -65,7 +70,7 @@ btnMostrarRegistro.addEventListener('click', () => {
 btnVolverDeLoginAInicio.addEventListener('click', () => {
     seccionRegistro.classList.add('oculto')
     seccionLogin.classList.add('oculto')
-    pantallaInicio.classList.remove('oculto')
+    seccionElegirDeporte.classList.remove('oculto')
     encabezadoPrincipal.classList.remove('oculto');
 
 
@@ -164,16 +169,14 @@ formLogin.addEventListener("submit", (e) => {
                 //Ocultamos login y mostramos inicio
                 seccionLogin.classList.add('oculto');
                 pantallaInicio.classList.add('oculto');
-                seccionReservas.classList.remove('oculto');
+                seccionReservas.classList.add('oculto');
+                seccionElegirDeporte.classList.remove('oculto');
+                encabezadoPrincipal.classList.add('oculto');
                 mensajeErrorLogin.textContent = "";
 
                 tituloBienvenida.textContent = "Bienvenido, " + datos.nombre;
 
                 nombreUsuarioActual = datos.nombre; //Guardo el nombre del usuario que inició sesión
-
-
-                generarDias(); //LLamo a la función para generar los días disponibles
-                cargarMisReservas(); //Cargo las reservas del usuario que inició sesión
 
                 //Limpiar los campos del formulario
                 document.getElementById("login-email").value = "";
@@ -401,7 +404,7 @@ function cargarMisReservas() {
             }
         })
         .then(listaReservas => {
-            
+
             const hoy = new Date()
             hoy.setHours(0, 0, 0, 0); //Pongo la hora a 00:00 para comparar solo fechas y que en el if no falle
 
@@ -566,4 +569,34 @@ function traerTodasLasReservas() {
 }
 
 
+//Aca va a estar todo lo de la interfaz que pregunta que deporte quiere reservar el usuario
+btnFutbol5.addEventListener("click", () => {
+    deporteElegido = "futbol5";
+    pantallaInicio.classList.add("oculto");
+    seccionElegirDeporte.classList.add("oculto");
+    seccionReservas.classList.remove("oculto");
+    encabezadoPrincipal.classList.add("oculto");
+    generarDias(); //LLamo a la función para generar los días disponibles
+    cargarMisReservas(); //Cargo las reservas del usuario que inició sesión
+});
 
+btnPadel.addEventListener("click", () => {
+    deporteElegido = "padel";
+    alert("La sección de pádel estará disponible próximamente. ¡Gracias por tu paciencia!");
+});
+
+btnVolverDeporteAInicio.addEventListener("click", () => {
+    seccionElegirDeporte.classList.add("oculto");
+    seccionReservas.classList.add("oculto");
+    pantallaInicio.classList.remove("oculto");
+    encabezadoPrincipal.classList.remove("oculto");
+});
+
+btnVolverDeReservasADeporte.addEventListener("click", () => {
+    seccionReservas.classList.add("oculto");
+    seccionLogin.classList.add("oculto");
+    seccionRegistro.classList.add("oculto");
+    encabezadoPrincipal.classList.add("oculto");
+    seccionElegirDeporte.classList.remove("oculto");
+    mensajeReservaExitosa.textContent = "";
+});

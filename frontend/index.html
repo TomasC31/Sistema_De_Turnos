@@ -62,12 +62,21 @@
             </form>
         </section>
 
+        <section id="seccion-elegir-deporte" class="oculto form-tarjeta-fondo">
+            <h2> Elige un deporte </h2>
+
+            <div id="contenedor-deportes" class="contenedor-deportes">
+                <button id="btn-futbol5" class="btn-inicio">Futbol 5</button>
+                <button id="btn-padel" class="btn-inicio">Pádel</button>
+            </div>
+
+            <button id="btn-volver-deporte-a-inicio" type="button" class="btn-inicio"> Volver a Inicio </button>
+        </section>
+
         <section id="seccion-reservas" class="oculto">
             <h2 id="titulo-bienvenida">Bienvenido</h2>
 
             <div id="contenedor-burbujas" class="contenedor-burbujas">
-
-
 
                 <div id="panel-medio" class="form-tarjeta-fondo-reserva">
 
@@ -81,8 +90,10 @@
                         <div id="contenedor-horarios"></div>
                     </div>
                     <p id="mensaje-reserva-exitosa" class="mensaje-exito-reserva"></p>
-                    <button id="btn-reservar" class="btn-inicio" disabled>Confirmar Reserva</button>
+                    
                     <button id="btn-cerrar-sesion" class="btn-inicio">Cerrar Sesion</button>
+                    <button id="btn-reservar" class="btn-inicio" disabled>Confirmar Reserva</button>
+                    <button id="btn-volver-a-elegir-deporte" class="btn-inicio"> Volver a Deportes </button>
 
                     <button id="btn-admin-ver-reservas" class="btn-inicio oculto">Ver Reservas</button>
                 </div>
