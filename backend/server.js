@@ -15,8 +15,6 @@ app.get('/', (req, res) => {
 });
 
 
-
-
 //-------- CONFIGURACIÓN DE LA BASE DE DATOS -----------------------------
 
 const pool = new Pool({
