@@ -448,7 +448,7 @@ function cargarMisReservas() {
 
                     tarjeta.classList.add("reserva-card"); //Creo una tarjeta para cada reserva
 
-                    tarjeta.innerHTML = `<p> Deporte: ${elementoDeLista.deporte} - Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
+                    tarjeta.innerHTML = `<p> Deporte: ${elementoDeLista.deporte} - Día: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
 
                     contenedorReservas.appendChild(tarjeta);
 
@@ -565,7 +565,7 @@ function traerTodasLasReservas() {
                     const tarjeta = document.createElement("div")
                     tarjeta.classList.add("reserva-card");
 
-                    tarjeta.innerHTML = `<p>Nombre: ${elementoDeLista.nombrecliente} - Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`;
+                    tarjeta.innerHTML = `<p> Deporte: ${elementoDeLista.deporte} - Nombre: ${elementoDeLista.nombrecliente} - Día: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`;
 
                     contenedorReservasAdmin.appendChild(tarjeta);
                 }
