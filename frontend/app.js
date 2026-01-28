@@ -69,8 +69,9 @@ btnMostrarRegistro.addEventListener('click', () => {
 
 btnVolverDeLoginAInicio.addEventListener('click', () => {
     seccionRegistro.classList.add('oculto')
+    seccionElegirDeporte.classList.add('oculto')
     seccionLogin.classList.add('oculto')
-    seccionElegirDeporte.classList.remove('oculto')
+    pantallaInicio.classList.remove('oculto')
     encabezadoPrincipal.classList.remove('oculto');
 
 
