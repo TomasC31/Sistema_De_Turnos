@@ -3,7 +3,8 @@
 }
 
 * {
-    box-sizing: border-box; /* Incluye el padding y border dentro del width y height */
+    box-sizing: border-box;
+    /* Incluye el padding y border dentro del width y height */
 }
 
 
@@ -17,7 +18,7 @@
 
 .contenedor-password-login,
 .contenedor-password-registro {
-    position: relative; 
+    position: relative;
     width: 100%;
 }
 
@@ -26,14 +27,15 @@
 #btn-ver-password-login,
 #btn-ver-password-registro {
     position: absolute;
-    right: 10px; 
-    top: 50%;       
-    transform: translateY(-50%); 
-    
-    background: none;  
-    border: none;    
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    background: none;
+    border: none;
     cursor: pointer;
-    font-size: 18px;    /* Tamaño del emoji */
+    font-size: 18px;
+    /* Tamaño del emoji */
     padding: 0;
     margin-top: 0;
 }
@@ -41,7 +43,8 @@
 /* Ajustamos el input para que el texto no se escriba encima del ojo */
 .contenedor-password input {
     width: 100%;
-    padding-right: 40px; /* Dejo espacio a la derecha para el icono */
+    padding-right: 40px;
+    /* Dejo espacio a la derecha para el icono */
 }
 
 
@@ -158,10 +161,15 @@ input[type="email"] {
     color: #333;
 }
 
-/* Esto le dice al CSS "Busca cualquier botón DENTRO de la tarjeta y empújalo hacia abajo" */
-.form-tarjeta-fondo button {
-    margin-top: 50px;
+
+.form-tarjeta-fondo .btn-inicio {
+    margin-top: 40px;
 }
+
+#contenedor-deportes {
+    margin-top: 0px;
+}
+
 
 /* Clase para cuando un botón de día está seleccionado */
 .btn-dia.seleccionado {
@@ -193,7 +201,7 @@ input[type="email"] {
 }
 
 .btn-deporte {
-   background-color: #D4AF37;
+    background-color: #D4AF37;
     color: black;
     padding: 20px 20px;
     border-radius: 8px;
@@ -206,7 +214,7 @@ input[type="email"] {
 }
 
 .btn-deporte:hover {
-    background-color: #B8860B; 
+    background-color: #B8860B;
 }
 
 
@@ -220,13 +228,13 @@ input[type="email"] {
     max-width: 680px;
     margin: 50px auto;
     text-align: center;
-    
+
 }
 
 /* Para que el titulo se vea mas lindo en la burbuja */
 .form-tarjeta-fondo-reserva h2 {
     margin-bottom: 20px;
-    font-weight: bold; 
+    font-weight: bold;
     color: #333;
 }
 
@@ -242,14 +250,16 @@ input[type="email"] {
     width: 100%;
     max-width: 320px;
     margin: 50px 50px;
-    position: absolute ;
+    position: absolute;
     left: 20px;
 }
 
 #contenedor-burbujas {
     display: flex;
-    justify-content: center; /* Para centrar horizontalmente */
-    gap: 40px;               /* Separa los paneles */
+    justify-content: center;
+    /* Para centrar horizontalmente */
+    gap: 40px;
+    /* Separa los paneles */
     align-items: flex-start;
     padding: 20px;
 }
@@ -259,9 +269,12 @@ input[type="email"] {
 
 #panel-izquierda {
     display: flex;
-    flex-wrap: wrap;       /* Si no entran, bajan a la siguiente línea */
-    gap: 15px;             /* Esto le da espacio entre cada tarjeta */
-    justify-content: center; /* Se alinean a la izquierda */
+    flex-wrap: wrap;
+    /* Si no entran, bajan a la siguiente línea */
+    gap: 15px;
+    /* Esto le da espacio entre cada tarjeta */
+    justify-content: center;
+    /* Se alinean a la izquierda */
     padding: 20px;
 }
 
@@ -269,12 +282,12 @@ input[type="email"] {
 .reserva-card {
     background-color: white;
     border: 1px solid #e0e0e0;
-    border-radius: 10px;  
+    border-radius: 10px;
     padding: 15px;
-    width: 250px;         
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-    
-   
+    width: 250px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -300,7 +313,7 @@ input[type="email"] {
 }
 
 .reserva-card button:hover {
-    background-color: rgb(114, 5, 5); 
+    background-color: rgb(114, 5, 5);
 }
 
 
@@ -310,36 +323,73 @@ input[type="email"] {
     #contenedor-burbujas {
         flex-direction: column;
         align-items: center;
+        padding: 5px;            
     }
+    
+    .contenedor-principal {
+        max-width: none;
+        width: 100%;
+        padding: 10px;
+    }
+
 
     #foto-uruz-principal {
-        height: 200px;       
-        object-fit: cover;  
-        object-position: center; 
-        margin-top: 100px; 
-    }
-
-        #pantalla-inicio {
-        margin-top: 65px; 
-        padding-bottom: 50px; 
-    }
-
-    .form-tarjeta-fondo {
+        height: 200px;
+        object-fit: cover;
+        object-position: center;
         margin-top: 100px;
     }
 
+    #pantalla-inicio {
+        margin-top: 65px;
+        padding-bottom: 50px;
+    }
+
+    .form-tarjeta-fondo {
+
+        width: 100%;
+        max-width: none;
+        margin: 60px 0;        
+    }
+
+    .form-tarjeta-fondo .btn-inicio {
+        margin-top: 15px;
+    }
+
+    #contenedor-deportes {
+        margin-top: 0px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+
+
+
     .form-tarjeta-fondo-reserva {
-        max-width: 90%;
+        width: 95%;
+        max-width: none;
+        margin: 0px auto;      
     }
 
     .form-tarjeta-fondo-reserva button {
-       margin-bottom: 15px; /* Esto los separa verticalmente */
-   }
+        margin-bottom: 15px;
+    }
 
     .form-tarjeta-fondo-reserva-izquierda {
         position: static;
-        margin: 20px 0;
-        max-width: 90%;
+        width: 95%;
+        margin: 0px 0;
+        max-width: none;
+
+    }
+
+    .botones-inicio .btn-inicio {
+        margin: 0 0 20px 0;
+    }
+
+    #btn-volver-deporte-a-inicio {
+        margin-top: 75px;
     }
 }
 
@@ -347,20 +397,26 @@ input[type="email"] {
 
 
 #panel-izquierda h3 {
-    width: 100%;       /* Fuerza al título a ocupar toda la línea */
-    text-align: center; /* Opcional: centra el texto */
-    margin-bottom: 20px; /* Separa el título de las tarjetas */
+    width: 100%;
+    /* Fuerza al título a ocupar toda la línea */
+    text-align: center;
+    /* Opcional: centra el texto */
+    margin-bottom: 20px;
+    /* Separa el título de las tarjetas */
 }
 
 #lista-reservas-admin {
-   display: grid;
-   grid-template-columns: 1fr 1fr 1fr;
-   gap: 20px;
-   justify-items: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    justify-items: center;
 }
 
 #btn-volver-a-reservas {
-   margin: 25px;
-   text-align: center;
+    margin: 25px;
+    text-align: center;
+}
 
+#btn-volver-deporte-a-inicio {
+    margin-top: 75px;
 }
