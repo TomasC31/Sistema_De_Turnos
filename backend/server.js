@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 
 const pool = new Pool({
     // Aquí pegaremos el link que nos de Neon.tech
-    connectionString:process.env.DATABASE_URL, 
+    connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false //Obligatorio para que funcione en la nube
     }
@@ -81,9 +81,9 @@ app.post('/reservar', async (req, res) => {
         }
     }
     catch (err) {
-        if (err.code === '23505'){
+        if (err.code === '23505') {
             return res.status(409).send("Error al intentar reservar el turno, seguramente intentaste reservar el turno al mismo tiempo que otro usuario");
-        }else{
+        } else {
             console.error(err);
             return res.status(500).send("Error al intentar reservar el turno");
         }
@@ -93,131 +93,140 @@ app.post('/reservar', async (req, res) => {
 
 //Para registrar usuario
 app.post("/registrar", async (req, res) => {
-        const { email, password, nombre } = req.body;
+    const { password, nombre } = req.body;
 
-        if (!nombre || !email || !password) {
-            return res.status(400).send("Faltan datos para registrarse")
+    let email = req.body.email;
+
+    if (!nombre || !email || !password) {
+        return res.status(400).send("Faltan datos para registrarse")
+    }
+
+    email = email.toLowerCase(); //Paso el email a min. después de la validación
+
+    try {
+        //Le pregunto a la BD si ya conoce el email
+        const resultadoBusqueda = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
+
+        if (resultadoBusqueda.rows.length > 0) {
+            return res.status(409).send("Usuario ya registrado")
+        }
+        else {
+            const passwordEncriptada = await bcrypt.hash(password, 10);
+
+            //Defino el rol antes de los inputs
+            let rolAguardar = 'usuario';
+
+            if (email === "uruz@gmail.com") {
+                rolAguardar = 'admin';
+            }
+
+            await pool.query('INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4)', [nombre, email, passwordEncriptada, rolAguardar]);
+            res.send(`Te has registrado correctamente con el email ${email}`)
         }
 
-        try {
-            //Le pregunto a la BD si ya conoce el email
-            const resultadoBusqueda = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error al registrar usuario");
+    }
+});
 
-            if (resultadoBusqueda.rows.length > 0) {
-                return res.status(409).send("Usuario ya registrado")
+
+//Para loguear usuario
+app.post("/login", async (req, res) => {
+    const {password } = req.body;
+    let email = req.body.email;
+
+   
+
+    if (!email || !password) {
+        return res.status(400).send("Faltan datos para iniciar sesión")
+    }
+
+     email = email.toLowerCase(); //Paso el email a min. despues de la validación
+
+    try {
+        const validacion = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
+
+        if (validacion.rows.length === 0) {
+            return res.status(404).send("Email no encontrado")
+        }
+        else {
+            const usuario = validacion.rows[0] //Obtengo el primer (y único) resultado de la consulta
+            const passwordEnBD = usuario.password; //Obtengo la contraseña hasheada que está en la BD
+
+            const coincidenLasContraseñas = await bcrypt.compare(password, passwordEnBD)
+
+            if (coincidenLasContraseñas === true) {
+                res.json({
+                    mensaje: "Bienvenido",
+                    nombre: usuario.nombre,
+                    rol: usuario.rol
+                })
             }
             else {
-                const passwordEncriptada = await bcrypt.hash(password, 10);
-
-                //Defino el rol antes de los inputs
-                let rolAguardar = 'usuario';
-
-                if (email === "uruz@gmail.com") {
-                    rolAguardar = 'admin';
-                }
-
-                await pool.query('INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4)', [nombre, email, passwordEncriptada, rolAguardar]);
-                res.send(`Te has registrado correctamente con el email ${email}`)
-            }
-
-        } catch (err) {
-            console.error(err);
-            res.status(500).send("Error al registrar usuario");
-        }
-    });
-
-
-    //Para loguear usuario
-    app.post("/login", async (req, res) => {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).send("Faltan datos para iniciar sesión")
-        }
-
-        try {
-            const validacion = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
-
-            if (validacion.rows.length === 0) {
-                return res.status(404).send("Email no encontrado")
-            }
-            else {
-                const usuario = validacion.rows[0] //Obtengo el primer (y único) resultado de la consulta
-                const passwordEnBD = usuario.password; //Obtengo la contraseña hasheada que está en la BD
-
-                const coincidenLasContraseñas = await bcrypt.compare(password, passwordEnBD)
-
-                if (coincidenLasContraseñas === true) {
-                    res.json({
-                        mensaje: "Bienvenido",
-                        nombre: usuario.nombre,
-                        rol: usuario.rol
-                    })
-                }
-                else {
-                    res.status(401).send("Usuario o contraseña incorrecta")
-                }
-            }
-        } catch (err) {
-            console.error(err);
-            res.status(500).send("Error del servidor al intentar iniciar sesión");
-        }
-    })
-
-    app.get('/ver-reservas', async (req, res) => {
-        const nombre = req.query.nombre
-
-        try {
-            const mostrar = await pool.query("SELECT * FROM reservas WHERE nombreCliente = $1", [nombre]);
-
-            if (mostrar.rows.length > 0) {
-                return res.status(200).send(mostrar.rows)
-            }
-            else {
-                res.status(409).send("No hay turnos reservados")
-            }
-        } catch (err) {
-            console.error(err);
-            res.status(500).send("Error del servidor al intentar ver las reservas");
-        }
-    })
-
-    app.get('/admin-ver-reservas', async (req, res) => {
-
-        try {
-            const mostrarReservasAdmin = await pool.query("SELECT * FROM reservas");
-
-            if (mostrarReservasAdmin.rows.length > 0) {
-                return res.status(200).send(mostrarReservasAdmin.rows)
-            }
-            else {
-                res.status(409).send("No hay turnos reservados")
+                res.status(401).send("Usuario o contraseña incorrecta")
             }
         }
-        catch (err) {
-            console.error(err);
-            res.status(500).send("Error del servidor al intentar mostrar las reservas");
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error del servidor al intentar iniciar sesión");
+    }
+})
+
+app.get('/ver-reservas', async (req, res) => {
+    const nombre = req.query.nombre
+
+    try {
+        const mostrar = await pool.query("SELECT * FROM reservas WHERE nombreCliente = $1", [nombre]);
+
+        if (mostrar.rows.length > 0) {
+            return res.status(200).send(mostrar.rows)
         }
-    })
-
-
-    //Para dar de baja el turno
-    app.delete('/cancelar/:id', async (req, res) => {
-
-        const id = req.params.id
-
-        try {
-            await pool.query("DELETE FROM reservas WHERE id = $1", [id]);
-
-            res.status(200).send("Reserva cancelada correctamente")
+        else {
+            res.status(409).send("No hay turnos reservados")
         }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error del servidor al intentar ver las reservas");
+    }
+})
 
-        catch (err) {
-            console.error(err);
-            res.status(500).send("Error del servidor al intentar cancelar una reserva")
+app.get('/admin-ver-reservas', async (req, res) => {
+
+    try {
+        const mostrarReservasAdmin = await pool.query("SELECT * FROM reservas");
+
+        if (mostrarReservasAdmin.rows.length > 0) {
+            return res.status(200).send(mostrarReservasAdmin.rows)
         }
+        else {
+            res.status(409).send("No hay turnos reservados")
+        }
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).send("Error del servidor al intentar mostrar las reservas");
+    }
+})
 
-    })
+
+//Para dar de baja el turno
+app.delete('/cancelar/:id', async (req, res) => {
+
+    const id = req.params.id
+
+    try {
+        await pool.query("DELETE FROM reservas WHERE id = $1", [id]);
+
+        res.status(200).send("Reserva cancelada correctamente")
+    }
+
+    catch (err) {
+        console.error(err);
+        res.status(500).send("Error del servidor al intentar cancelar una reserva")
+    }
+
+})
 
 //ARRANCO EL SERVIDOR
 const PORT = process.env.PORT || 3000;
