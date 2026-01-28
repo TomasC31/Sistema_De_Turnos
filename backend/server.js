@@ -47,7 +47,7 @@ app.get('/horarios', async (req, res) => {
     const fechaConsultada = req.query.fecha;
     const horarioConsultado = req.query.horario;
 
-    const validar = await pool.query("SELECT * FROM reservas WHERE fechaReserva = $1 AND horarioElegido = $2", [fechaConsultada, horarioConsultado]);
+    const validar = await pool.query("SELECT * FROM reservas WHERE fechaReserva = $1 AND horarioElegido = $2 AND deporte = $3", [fechaConsultada, horarioConsultado, req.query.deporte]);
 
     if (validar.rows.length > 0) {
         return res.status(409).send("Turno ocupado")
@@ -63,20 +63,20 @@ app.post('/reservar', async (req, res) => {
 
     try {
 
-        const { nombre, fecha, horario } = req.body;
+        const { nombre, fecha, horario, deporte } = req.body;
 
-        if (!nombre || !fecha || !horario) {
+        if (!nombre || !fecha || !horario || !deporte) {
             res.status(400).send('Faltan datos para procesar la reserva');
             return;
         }
 
-        const validarTurno = await pool.query("SELECT * FROM reservas WHERE fechaReserva = $1 AND horarioElegido = $2", [fecha, horario]);
+        const validarTurno = await pool.query("SELECT * FROM reservas WHERE fechaReserva = $1 AND horarioElegido = $2 AND deporte = $3", [fecha, horario, deporte]);
 
         if (validarTurno.rows.length > 0) {
             return res.status(409).send("Turno ocupado")
         }
         else {
-            await pool.query("INSERT INTO reservas (nombreCliente, fechaReserva, horarioElegido) VALUES ($1, $2, $3)", [nombre, fecha, horario]);
+            await pool.query("INSERT INTO reservas (nombreCliente, fechaReserva, horarioElegido, deporte) VALUES ($1, $2, $3, $4)", [nombre, fecha, horario, deporte]);
             res.send("El turno se guardó correctamente")
         }
     }

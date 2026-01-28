@@ -297,17 +297,24 @@ function generarHorarios(fechaSeleccionada) {
     horaPendiente = "";
     botonHorarioPendiente = null;
 
+
     btnReservar.disabled = true;
 
     contenedorHorarios.innerHTML = ""; //Limpia los horarios anteriores
-    const listaHorarios = ["18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
+    let listaHorarios = []
+
+     if(deporteElegido === "futbol5"){
+            listaHorarios = ["18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
+        }else{
+            listaHorarios = ["16:30", "18:00", "19:30", "21:00", "22:30"]
+        }
 
     listaHorarios.forEach(hora => {
         const botonHora = document.createElement("button");
         botonHora.classList.add("btn-horario");
         botonHora.textContent = hora;
 
-        fetch(`/horarios?fecha=${fechaSeleccionada}&horario=${hora}`)
+        fetch(`/horarios?fecha=${fechaSeleccionada}&horario=${hora}&deporte=${deporteElegido}`)
             .then(response => {
                 if (!response.ok) {
                     botonHora.disabled = true; //Deshabilito el botón si el turno está ocupado
@@ -343,7 +350,7 @@ function reservarCancha(fecha, hora, botonHora) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ nombre: nombreUsuarioActual, fecha, horario: hora })
+        body: JSON.stringify({ nombre: nombreUsuarioActual, fecha, horario: hora, deporte: deporteElegido })
     })
 
         .then(response => {
@@ -441,7 +448,7 @@ function cargarMisReservas() {
 
                     tarjeta.classList.add("reserva-card"); //Creo una tarjeta para cada reserva
 
-                    tarjeta.innerHTML = `<p>Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
+                    tarjeta.innerHTML = `<p> Deporte: ${elementoDeLista.deporte} - Fecha: ${pasarFechaANombreDiaYNumero(fechaTexto)} - Hora: ${hora}</p> <button onclick="cancelarReserva(${elementoDeLista.id})">Cancelar</button>`; //Creo el contenido de la tarjeta con la información de la reserva y el botón de cancelar
 
                     contenedorReservas.appendChild(tarjeta);
 
@@ -583,7 +590,12 @@ btnFutbol5.addEventListener("click", () => {
 
 btnPadel.addEventListener("click", () => {
     deporteElegido = "padel";
-    alert("La sección de pádel estará disponible próximamente. ¡Gracias por tu paciencia!");
+    pantallaInicio.classList.add("oculto");
+    seccionElegirDeporte.classList.add("oculto");
+    encabezadoPrincipal.classList.add("oculto");
+    seccionReservas.classList.remove("oculto");
+    generarDias();
+    cargarMisReservas();
 });
 
 btnVolverDeporteAInicio.addEventListener("click", () => {
@@ -600,4 +612,5 @@ btnVolverDeReservasADeporte.addEventListener("click", () => {
     encabezadoPrincipal.classList.add("oculto");
     seccionElegirDeporte.classList.remove("oculto");
     mensajeReservaExitosa.textContent = "";
+    contenedorHorarios.innerHTML = ""; //Limpia los horarios anteriores
 });
