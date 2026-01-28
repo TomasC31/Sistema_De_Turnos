@@ -99,6 +99,7 @@ input[type="email"] {
     padding: 10px 20px;
     border-radius: 20px;
     margin: 0 10px;
+    width: 150px;
 }
 
 .btn-inicio:hover {
@@ -117,6 +118,10 @@ input[type="email"] {
     border-radius: 8px;
 }
 
+.btn-dia:hover {
+    background-color: #e0e0e0;
+}
+
 
 .btn-horario {
     background-color: #e0e0e0;
@@ -125,6 +130,10 @@ input[type="email"] {
     margin: 5px;
     cursor: pointer;
     border-radius: 4px;
+}
+
+.btn-horario:hover {
+    background-color: #ccc;
 }
 
 
@@ -170,6 +179,7 @@ input[type="email"] {
 }
 
 
+
 .mensaje-error {
     color: red;
     font-size: 18px;
@@ -180,6 +190,23 @@ input[type="email"] {
     color: green;
     font-size: 18px;
     margin-top: 50px;
+}
+
+.btn-deporte {
+   background-color: #D4AF37;
+    color: black;
+    padding: 20px 20px;
+    border-radius: 8px;
+    margin: 0 10px;
+    width: 150px;
+    font-size: 15px;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+
+}
+
+.btn-deporte:hover {
+    background-color: #B8860B; 
 }
 
 
@@ -199,7 +226,7 @@ input[type="email"] {
 /* Para que el titulo se vea mas lindo en la burbuja */
 .form-tarjeta-fondo-reserva h2 {
     margin-bottom: 20px;
-    font-weight: bold;
+    font-weight: bold; 
     color: #333;
 }
 
